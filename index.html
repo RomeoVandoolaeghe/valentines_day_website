@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danaé, veux-tu être ma Valentine ?</title>
+    <style>
+        /* --- CSS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@600&display=swap');
+
+        /* --- Pluie de coeurs en fond --- */
+        .heart-bg {
+            position: fixed;
+            /* Reste à l'écran même si on scroll */
+            top: -50px;
+            /* Commence au-dessus de l'écran */
+            z-index: -1;
+            /* Se place DERRIÈRE la roue */
+            user-select: none;
+            /* On ne peut pas sélectionner le texte */
+            pointer-events: none;
+            /* On peut cliquer à travers */
+            animation-name: fall-heart;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes fall-heart {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+                /* Tombe plus bas que l'écran */
+                opacity: 0;
+                /* Disparaît doucement à la fin */
+            }
+        }
+
+
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #ffe6e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #d6336c;
+            font-family: 'Pacifico', cursive;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2.5rem;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin-bottom: 30px;
+        }
+
+        /* La flèche / Le pointeur en forme de cœur inversé */
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: #ff0000;
+            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+            z-index: 10;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            /* Effet de ralentissement */
+        }
+
+        /* Les segments de texte */
+        .segment-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            /* La largeur fait exactement la moitié de la roue (le rayon) */
+            width: 50%;
+            height: 20px;
+            /* Hauteur fixe pour centrer le texte */
+
+            /* LE SECRET EST ICI : On pivote depuis le côté GAUCHE (le centre de la roue) */
+            transform-origin: 0% 50%;
+
+            /* Alignement du texte */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            /* Pousse le texte vers le bord extérieur */
+            padding-right: 35px;
+            /* Marge de sécurité pour ne pas toucher le bord blanc */
+            box-sizing: border-box;
+
+            /* Style du texte */
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            /* Un peu plus petit pour que "EVIDEMMENT" rentre */
+            font-family: 'Poppins', sans-serif;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+        }
+
+        button {
+            background-color: #d6336c;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Pacifico', cursive;
+            box-shadow: 0 4px 15px rgba(214, 51, 108, 0.4);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background-color: #c2255c;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Le message de résultat */
+        #result {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #d6336c;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s;
+            text-align: center;
+            min-height: 40px;
+        }
+
+        /* Confettis simples */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Danaé, veux-tu être ma Valentine ?</h1>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel">
+        </div>
+    </div>
+
+    <button id="spinBtn">Lancer la roue</button>
+    <div id="result"></div>
+
+    <script>
+        /* --- JAVASCRIPT --- */
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultDiv = document.getElementById('result');
+
+        // Les segments : tu peux changer les textes ici
+        const segments = [
+            { text: "OUI !", color: "#ff8787" },
+            { text: "EVIDEMMENT", color: "#f783ac" },
+            { text: "AVEC PLAISIR", color: "#da77f2" },
+            { text: "ABSOLUMENT", color: "#be4bdb" },
+            { text: "BIEN SÛR", color: "#9775fa" },
+            { text: "YES !", color: "#748ffc" },
+            { text: "POURQUOI PAS", color: "#4dabf7" },
+            { text: "OHHH OUIIII", color: "#3bc9db" }
+        ];
+
+        const numSegments = segments.length;
+        const segmentAngle = 360 / numSegments;
+        let currentRotation = 0;
+
+        // 1. Initialisation de la roue (Couleurs et Texte)
+        function initWheel() {
+            // Création du dégradé conique pour le fond
+            let gradientStr = `conic-gradient(`;
+            segments.forEach((seg, index) => {
+                const startAngle = index * segmentAngle;
+                const endAngle = (index + 1) * segmentAngle;
+                gradientStr += `${seg.color} ${startAngle}deg ${endAngle}deg, `;
+            });
+            gradientStr = gradientStr.slice(0, -2) + ")";
+            wheel.style.background = gradientStr;
+
+            // Ajout du texte
+            segments.forEach((seg, index) => {
+                const textDiv = document.createElement('div');
+                textDiv.className = 'segment-text';
+                textDiv.innerText = seg.text;
+
+                // Calcul de l'angle au centre du segment
+                const angleMoyen = (index * segmentAngle) + (segmentAngle / 2);
+
+                // On retire 90deg car le CSS commence à 3h (droite) et notre roue à 12h (haut)
+                // translateY(-50%) permet de centrer la hauteur de la ligne de texte exactement sur le rayon
+                textDiv.style.transform = `translateY(-50%) rotate(${angleMoyen - 90}deg)`;
+
+                wheel.appendChild(textDiv);
+            });
+        }
+        // 2. Fonction pour tourner
+        spinBtn.addEventListener('click', () => {
+            // Désactiver le bouton pendant le tour
+            spinBtn.disabled = true;
+            resultDiv.style.opacity = '0';
+            resultDiv.innerText = '';
+
+            // Calcul d'une rotation aléatoire (min 5 tours complets + aléatoire)
+            const randomDeg = Math.floor(2000 + Math.random() * 2000);
+            currentRotation += randomDeg;
+
+            // Appliquer la rotation
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            // Calculer le résultat après l'animation (4 secondes)
+            setTimeout(() => {
+                showResult(currentRotation);
+                spinBtn.disabled = false;
+                launchConfetti();
+            }, 4000);
+        });
+
+        // 3. Calculer sur quel segment on est tombé
+        function showResult(rotation) {
+            // On ramène la rotation à une valeur entre 0 et 360
+            const actualDeg = rotation % 360;
+
+            // Comme la flèche est en haut (0deg) et que la roue tourne en sens horaire,
+            // l'index gagnant se calcule en inversant la logique
+            const index = Math.floor((360 - actualDeg) / segmentAngle) % numSegments;
+
+            const winner = segments[index];
+            resultDiv.innerText = `Quel hasard ! La réponse est : ${winner.text}`;
+            resultDiv.style.opacity = '1';
+        }
+
+        // Bonus : Effet de confettis simple
+        function launchConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = ['#ff0', '#f00', '#0f0', '#00f'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+        /* --- Logique pour la pluie de coeurs --- */
+        function createFallingHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('heart-bg');
+            heart.innerText = '❤️'; // Tu peux aussi mettre '💖' ou '💘'
+
+            // Position horizontale aléatoire (de 0 à 100% de l'écran)
+            heart.style.left = Math.random() * 100 + 'vw';
+
+            // Vitesse de chute aléatoire (entre 3 et 8 secondes)
+            const duration = Math.random() * 5 + 3;
+            heart.style.animationDuration = duration + 's';
+
+            // Taille aléatoire (entre 10px et 30px) pour effet de profondeur
+            const size = Math.random() * 20 + 10;
+            heart.style.fontSize = size + 'px';
+
+            // Opacité aléatoire pour que certains soient plus discrets
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+
+            document.body.appendChild(heart);
+
+            // Supprimer le coeur du code une fois qu'il est tombé pour ne pas ralentir le site
+            setTimeout(() => {
+                heart.remove();
+            }, duration * 1000);
+        }
+
+        // Lancer la création de coeurs en continu (toutes les 300ms)
+        setInterval(createFallingHeart, 300);
+
+        // Lancer l'initialisation
+        initWheel();
+    </script>
+</body>
+
+</html>
