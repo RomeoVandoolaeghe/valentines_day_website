@@ -172,6 +172,38 @@
             animation: fall linear forwards;
         }
 
+        img {
+            width: 150px;
+            height: 150px;
+
+        }
+
+        #marmotte {
+            position: absolute;
+            left: 600px;
+            top: 20px;
+
+        }
+
+        /* Conteneur pour superposer le cœur et l'image */
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Style du cœur en arrière-plan */
+        .heart-behind {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 200px;
+            /* Ajustez la taille selon vos besoins */
+            z-index: -1;
+            /* Place le cœur derrière l'image */
+            opacity: 0.6;
+        }
+
         @keyframes fall {
             to {
                 transform: translateY(100vh) rotate(720deg);
@@ -180,9 +212,19 @@
     </style>
 </head>
 
+
+<div id="chat" class="image-container">
+    <span class="heart-behind">❤️</span>
+    <img src="pngtree-isolated-sitting-orange-cat-on-white-background-png-image_7094889.png" alt="Chat">
+</div>
+
+<div id="marmotte" class="image-container">
+    <span class="heart-behind">❤️</span>
+    <img src="pngtree-marmot-full-body-png-image_10506935.png" alt="Marmotte">
+</div>
+
 <body>
 
-    <img src="pngtree-marmot-full-body-png-image_10506935.png" alt="">
 
     <h1>Danaé, veux-tu être ma Valentine ?</h1>
 
